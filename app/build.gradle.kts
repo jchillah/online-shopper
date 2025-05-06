@@ -1,3 +1,6 @@
+import java.io.*
+import java.util.*
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -19,13 +22,16 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    val keystoreProperties = Properties()
+    keystoreProperties.load(FileInputStream(rootProject.file("keystore.properties")))
+
     // HIER kommt die Signierungskonfiguration
     signingConfigs {
         create("release") {
-            storeFile = file("/Users/jchillah/dev/Kotlin-Keytool/keystore.jks")
-            storePassword = "17223326"
-            keyAlias = "your_alias"
-            keyPassword = "17223326"
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
         }
     }
 
