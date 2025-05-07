@@ -10,7 +10,6 @@ import retrofit2.converter.moshi.*
 
 object FakeStoreAPI {
     val loggingInterceptor = HttpLoggingInterceptor().apply {
-        // Logging Levels: BODY, BASIC, NONE, HEADERS
         level = HttpLoggingInterceptor.Level.BODY
     }
 

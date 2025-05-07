@@ -2,8 +2,9 @@ package de.syntax_institut.jetpack.a04_05_online_shopper.ui.components
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.*
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.CardDefaults.cardElevation
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.*
@@ -20,29 +21,48 @@ fun ProductCard(product: Product) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Pink80
-        ),
-        elevation = cardElevation()
+        colors = CardDefaults.cardColors(containerColor = Pink80),
+        elevation = CardDefaults.cardElevation()
     ) {
         Column(
             modifier = Modifier
                 .padding(16.dp)
                 .background(Purple40)
         ) {
-
-            AsyncImage(
+            SubcomposeAsyncImage(
                 model = product.image,
-                contentDescription = "Produktbild",
-                contentScale = ContentScale.FillWidth,
+                contentDescription = product.title,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
-            )
+            ) {
+                when (painter.state) {
+                    is AsyncImagePainter.State.Loading -> Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    }
+
+                    is AsyncImagePainter.State.Error -> Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "Fehler beim Laden des Bildes",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+
+                    else -> SubcomposeAsyncImageContent()
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Titel des Produkts
             Text(
                 product.title,
                 style = MaterialTheme.typography.titleMedium,

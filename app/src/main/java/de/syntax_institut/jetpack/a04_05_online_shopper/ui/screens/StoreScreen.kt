@@ -22,24 +22,23 @@ fun StoreScreen(
 ) {
     val productState by viewModel.products.collectAsState()
     val categoriesState by viewModel.categories.collectAsState()
+
     var selectedCategory by remember { mutableStateOf<String?>(null) }
     var limitText by remember { mutableStateOf("") }
 
     Column(
         modifier = modifier
+            .fillMaxSize()
             .padding(16.dp)
-            .background(Purple80),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(Purple80)
     ) {
         if (filterVisible) {
-            val categories = when (val state = categoriesState) {
-                is UiState.Success -> state.data
+            val cats = when (val s = categoriesState) {
+                is UiState.Success -> s.data
                 else -> emptyList()
             }
-
             FilterItem(
-                categories = categories,
+                categories = cats,
                 selectedCategory = selectedCategory,
                 limitText = limitText,
                 onCategorySelected = {
@@ -54,42 +53,46 @@ fun StoreScreen(
                     )
                 },
                 onResetFilter = {
-                    // Zurücksetzen der Filter
                     selectedCategory = null
                     limitText = ""
-                    viewModel.loadProducts() // Lädt die Produkte ohne Filter
+                    viewModel.loadProducts() // ohne Filter
                 }
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(Modifier.height(16.dp))
 
         when (val state = productState) {
-            is UiState.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+            UiState.Loading -> Box(
+                Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator()
             }
-
             is UiState.Success -> ProductList(products = state.data)
-            is UiState.Error -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+            is UiState.Error -> Box(
+                Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+            ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = "Error",
+                        Icons.Default.Warning,
+                        contentDescription = null,
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(64.dp)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(Modifier.height(8.dp))
                     Text(
                         text = state.message,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyLarge
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(Modifier.height(8.dp))
                     Button(onClick = {
+                        // Retry: immer auch Kategorien nachladen
                         viewModel.loadProducts(
                             limit = limitText.toIntOrNull(),
                             category = selectedCategory
                         )
+                        viewModel.loadCategories()
                     }) {
                         Text("Erneut versuchen")
                     }
