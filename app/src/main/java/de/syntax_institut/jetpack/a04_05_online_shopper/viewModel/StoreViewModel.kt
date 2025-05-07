@@ -19,16 +19,30 @@ class StoreViewModel : ViewModel() {
     val categories: StateFlow<UiState<List<String>>> = _categories
 
     init {
-        loadProducts()
-        loadCategories()
+        loadProducts(reloadCategories = true)
     }
 
-    fun loadProducts(limit: Int? = null, category: String? = null) {
+    fun loadProducts(
+        limit: Int? = null,
+        category: String? = null,
+        reloadCategories: Boolean = false
+    ) {
         viewModelScope.launch {
             _products.value = UiState.Loading
-            delay(3_000)
-
+            if (reloadCategories) {
+                _categories.value = UiState.Loading
+            }
+            delay(3000)
             try {
+                if (reloadCategories) {
+                    val catResp = api.getCategories()
+                    _categories.value = if (catResp.isSuccessful) {
+                        UiState.Success(catResp.body().orEmpty())
+                    } else {
+                        UiState.Error("Kategorien konnten nicht geladen werden.")
+                    }
+                }
+
                 val resp = when {
                     category != null -> api.getProductsByCategory(category)
                     limit != null -> api.getProductsWithLimit(limit)
@@ -37,45 +51,27 @@ class StoreViewModel : ViewModel() {
 
                 if (resp.isSuccessful) {
                     val list = resp.body().orEmpty()
-                    val filtered = if (category != null && limit != null)
-                        list.filter { it.category == category }.take(limit)
-                    else list
+                    val filtered = when {
+                        category != null && limit != null ->
+                            list.filter { it.category == category }.take(limit)
+
+                        else -> list
+                    }
                     _products.value = UiState.Success(filtered)
                 } else {
-                    _products.value = when (resp.code()) {
-                        in 500..599 -> UiState.Error("Oops, der Server hat gerade Probleme. Bitte später erneut versuchen.")
-                        404 -> UiState.Error("Die angeforderten Produkte wurden nicht gefunden.")
-                        else -> UiState.Error("Fehler ${resp.code()}: Bitte überprüfe deine Verbindung.")
-                    }
+                    _products.value = UiState.Error(
+                        if (resp.code() in 500..599)
+                            "Serverfehler – bitte später erneut versuchen."
+                        else
+                            "Verbindungsfehler – prüfe deine Internetverbindung."
+                    )
                 }
             } catch (_: IOException) {
-                _products.value =
-                    UiState.Error("Keine Netzwerkverbindung. Bitte prüfe deine Internet-Einstellungen.")
+                _products.value = UiState.Error("Keine Netzwerkverbindung.")
             } catch (e: HttpException) {
-                _products.value =
-                    UiState.Error("Serverfehler (${e.code()}). Versuche es später erneut.")
-            } catch (e: Exception) {
-                _products.value = UiState.Error("Unerwarteter Fehler: ${e.localizedMessage}")
-            }
-        }
-    }
-
-    fun loadCategories() {
-        viewModelScope.launch {
-            _categories.value = UiState.Loading
-            delay(3_000)
-
-            try {
-                val resp = api.getCategories()
-                if (resp.isSuccessful) {
-                    _categories.value = UiState.Success(resp.body().orEmpty())
-                } else {
-                    _categories.value =
-                        UiState.Error("Fehler ${resp.code()} beim Laden der Kategorien.")
-                }
-            } catch (e: Exception) {
-                _categories.value =
-                    UiState.Error("Konnte Kategorien nicht laden: ${e.localizedMessage}")
+                _products.value = UiState.Error("HTTP-Fehler ${e.code()}.")
+            } catch (_: Exception) {
+                _products.value = UiState.Error("Unerwarteter Fehler.")
             }
         }
     }

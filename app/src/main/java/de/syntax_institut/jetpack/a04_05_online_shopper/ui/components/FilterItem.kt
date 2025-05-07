@@ -32,7 +32,6 @@ fun FilterItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Dropdown für Kategorien
         ExposedDropdownMenuBox(
             modifier = Modifier
                 .padding(8.dp),
@@ -75,7 +74,6 @@ fun FilterItem(
             }
         }
 
-        // TextField für das Limit
         TextField(
             modifier = Modifier
                 .padding(8.dp),
@@ -94,7 +92,6 @@ fun FilterItem(
             modifier = Modifier
                 .padding(8.dp)
         ) {
-            // Button für das Anwenden des Filters
             Button(
                 modifier = Modifier
                     .height(60.dp)
@@ -108,7 +105,6 @@ fun FilterItem(
                 Text("Anwenden")
             }
 
-            // Button zum Zurücksetzen des Filters
             Button(
                 modifier = Modifier
                     .height(60.dp)

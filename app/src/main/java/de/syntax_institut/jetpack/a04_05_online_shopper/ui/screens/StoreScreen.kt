@@ -1,6 +1,5 @@
 package de.syntax_institut.jetpack.a04_05_online_shopper.ui.screens
 
-import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
@@ -8,9 +7,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.unit.*
+import de.syntax_institut.jetpack.a04_05_online_shopper.data.model.*
 import de.syntax_institut.jetpack.a04_05_online_shopper.ui.components.*
 import de.syntax_institut.jetpack.a04_05_online_shopper.ui.state.*
-import de.syntax_institut.jetpack.a04_05_online_shopper.ui.theme.*
 import de.syntax_institut.jetpack.a04_05_online_shopper.viewModel.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -18,7 +17,8 @@ import de.syntax_institut.jetpack.a04_05_online_shopper.viewModel.*
 fun StoreScreen(
     viewModel: StoreViewModel,
     filterVisible: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onProductClick: (Product) -> Unit
 ) {
     val productState by viewModel.products.collectAsState()
     val categoriesState by viewModel.categories.collectAsState()
@@ -27,10 +27,9 @@ fun StoreScreen(
     var limitText by remember { mutableStateOf("") }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
+        modifier
             .padding(16.dp)
-            .background(Purple80)
+            .fillMaxWidth()
     ) {
         if (filterVisible) {
             val cats = when (val s = categoriesState) {
@@ -43,19 +42,20 @@ fun StoreScreen(
                 limitText = limitText,
                 onCategorySelected = {
                     selectedCategory = it
-                    viewModel.loadProducts(limit = limitText.toIntOrNull(), category = it)
+                    viewModel.loadProducts(limitText.toIntOrNull(), it, reloadCategories = false)
                 },
                 onLimitChanged = { limitText = it },
                 onApplyFilter = {
                     viewModel.loadProducts(
-                        limit = limitText.toIntOrNull(),
-                        category = selectedCategory
+                        limitText.toIntOrNull(),
+                        selectedCategory,
+                        reloadCategories = false
                     )
                 },
                 onResetFilter = {
                     selectedCategory = null
                     limitText = ""
-                    viewModel.loadProducts() // ohne Filter
+                    viewModel.loadProducts(reloadCategories = true)
                 }
             )
         }
@@ -63,36 +63,27 @@ fun StoreScreen(
         Spacer(Modifier.height(16.dp))
 
         when (val state = productState) {
-            UiState.Loading -> Box(
-                Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-            ) {
+            UiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
-            is UiState.Success -> ProductList(products = state.data)
-            is UiState.Error -> Box(
-                Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-            ) {
+
+            is UiState.Success -> ProductList(
+                products = state.data,
+                onItemClick = onProductClick
+            )
+
+            is UiState.Error -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         Icons.Default.Warning,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(64.dp)
+                        tint = MaterialTheme.colorScheme.error
                     )
                     Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = state.message,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Text(state.message, color = MaterialTheme.colorScheme.error)
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = {
-                        // Retry: immer auch Kategorien nachladen
-                        viewModel.loadProducts(
-                            limit = limitText.toIntOrNull(),
-                            category = selectedCategory
-                        )
-                        viewModel.loadCategories()
+                        viewModel.loadProducts(reloadCategories = true)
                     }) {
                         Text("Erneut versuchen")
                     }
