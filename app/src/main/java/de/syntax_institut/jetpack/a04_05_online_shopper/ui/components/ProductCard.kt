@@ -1,6 +1,5 @@
 package de.syntax_institut.jetpack.a04_05_online_shopper.ui.components
 
-import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
@@ -21,14 +20,12 @@ fun ProductCard(
 ) {
     Card(
         modifier = modifier
-            .fillMaxWidth()
             .padding(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Pink80),
-        elevation = CardDefaults.cardElevation()
+        colors = CardDefaults.cardColors(containerColor = Purple80),
+        elevation = CardDefaults.cardElevation(5.dp)
     ) {
         Column(
             modifier = Modifier
-                .background(Purple40)
                 .padding(16.dp)
         ) {
             SubcomposeAsyncImage(
@@ -50,6 +47,7 @@ fun ProductCard(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
+
                     is AsyncImagePainter.State.Error -> Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -63,6 +61,7 @@ fun ProductCard(
                             modifier = Modifier.size(48.dp)
                         )
                     }
+
                     else -> SubcomposeAsyncImageContent()
                 }
             }
