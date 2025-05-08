@@ -14,12 +14,11 @@ import androidx.navigation.compose.*
 import de.syntax_institut.jetpack.a04_05_online_shopper.ui.screens.*
 import de.syntax_institut.jetpack.a04_05_online_shopper.ui.theme.*
 import de.syntax_institut.jetpack.a04_05_online_shopper.viewModel.*
-import de.syntax_institut.jetpack.a04_05_online_shopper.viewModel.ui.theme.onlineshopperjchillahTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App() {
-    onlineshopperjchillahTheme {
+    AppTheme {
         val navController = rememberNavController()
         val viewModel: StoreViewModel = viewModel()
         var filterVisible by remember { mutableStateOf(false) }
